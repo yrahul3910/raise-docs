@@ -150,3 +150,107 @@ Writing out `\left\lvert` and `\right\rvert` each time is tedious. Use the comma
 \makeatother
 ```
 
+## Responding to Reviews
+
+We have a standard way of replying to reviewers, which makes it easy for them to see where your changes are. In your LaTeX preamble, add the following:
+
+```tex
+\usepackage{framed}
+
+\makeatletter
+\renewenvironment{framed}{%
+ \def\FrameCommand##1{\hskip\@totalleftmargin
+ \fboxsep=\FrameSep\fbox{##1}
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed}
+\makeatother
+
+% environment derived from framed.sty: see leftbar environment definition
+\definecolor{formalshade}{rgb}{0.93,0.93,0.93}
+\definecolor{darkblue}{rgb}{0.2, 0.2, 0.2}
+
+\newenvironment{formal}{%
+  \def\FrameCommand{%
+    \hspace{1pt}%
+    {\color{darkblue}\vrule width 2pt}%
+    {\color{formalshade}\vrule width 4pt}%
+    \colorbox{formalshade}%
+  }%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}%
+  \noindent\hspace{-1pt}% disable indenting first paragraph
+  \begin{adjustwidth}{}{7pt}%
+  \vspace{2pt}\vspace{2pt}%
+}
+{%
+  \vspace{3pt}\end{adjustwidth}\endMakeFramed%
+  }
+
+%% Response text prefix
+\newcommand{\respto}[1]{
+\fcolorbox{black}{black!15}{%
+\label{resp:#1}%
+\bf\scriptsize R{#1}}}
+
+%% Response text prefix
+\newcommand{\bareresp}[1]{
+\fcolorbox{black}{black!15}{%
+\bf\scriptsize R{#1}}}
+\newcommand{\BLUE}{\color{blue}}
+\newcommand{\BLACK}{\color{black}}
+
+%% Cite responses
+\newcommand{\citeresp}[1]{%
+{(see }\fcolorbox{black}{black!15}{%
+\bf\scriptsize R{#1}}~{{on page \pageref{resp:#1})}}}%
+
+\newenvironment{response}[2]{
+    \par\noindent
+    \BLUE 
+    \respto{#1} {#2}%
+}{
+    \par\noindent
+    \BLACK
+}
+\newcommand{\changed}[2]{\BLUE \respto{#1} {#2} \BLACK}
+```
+
+In your LaTeX, you'll probably change some text based on the reviewers' recommendations. For example:
+
+```tex
+The smoothness can be defined as \changed{1a1.1}{the supremum of the norm of the Hessian}.
+```
+
+This does a couple of things:
+* It creates a label "R1a1.1", which means: "The first thing that we changed in response to Reviewer 1's first comment". In general, you the first argument will follow the structure: `<reviewer number>a<comment number>.<which point you are addressing>`. This way, if, for example, in response to Reviewer 2's second comment, you changed three things, and you want to add a reference to the third one, you'd use `\changed{2a2.3}{...}`.
+* It changes the text color within the second argument to blue. If you have footnotes there, they will also change to blue.
+
+Now, at the end of your file, you will add the responses. Start with this template:
+
+```tex
+\clearpage
+
+\setcounter{page}{1}
+\pagenumbering{roman}
+\normalsize
+\twocolumn
+\newpage
+\section*{Response to Reviewers}
+\subsection*{Response to AE}
+
+Some text here
+
+\subsection{Response to Reviewer 1}
+
+\begin{formal}  % This is an environment you defined above.
+    Add their comment here
+\end{formal}
+
+\begin{response}{1a1}  % Change the numbering here: 1a1 means Reviewer 1, comment 1.
+    Add your response here, and show where you have changed something, like this \citeresp{1a1.1}
+\end{response}
+```
+
+The first set of commands is one-time, and sets up a new page for responses. The `formal` environment is a nice-looking box containing the text inside it. To each comment, you will add a corresponding `response` environment, passing in as the first argument, the reviewer number and the comment number (so `1a1` means Reviewer 1, comment 1). Having changed the text using the syntax above, you can now cite it using `\citeresp`, which will show the page number and the label where you made the changes.
