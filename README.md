@@ -81,6 +81,8 @@ Occasionally, you will want to have a quartile chart or a bar showing a summary 
 
 ```tex
 % Preamble
+\usepackage{xcolor}
+\usepackage{calc}
 \newcommand{\sbar}[1]{{\color{darkgray}\rule{\dimexpr 1cm * #1 / 100}{5pt}\color{lightgray}\rule{\dimexpr 1cm * (100 - #1) / 100}{5pt}}}
 
 % Usage
