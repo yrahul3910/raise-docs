@@ -256,3 +256,42 @@ Some text here
 ```
 
 The first set of commands is one-time, and sets up a new page for responses. The `formal` environment is a nice-looking box containing the text inside it. To each comment, you will add a corresponding `response` environment, passing in as the first argument, the reviewer number and the comment number (so `1a1` means Reviewer 1, comment 1). Having changed the text using the syntax above, you can now cite it using `\citeresp`, which will show the page number and the label where you made the changes.
+
+### A more advanced version
+
+Sometimes, you'll want to pass multiple references to `\citeresp`. Having multiple `\citeresp` is problematic because it produces multiple "(see ...)" texts. We can use LaTeX3's L3 programming layer to define a more advanced version of this command:
+
+```tex
+\usepackage{xparse}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+\NewDocumentCommand{\citeresp}{m}
+{
+  (see~
+  \seq_set_split:Nnn \l_citeresp_items_seq {, } { #1 } % Split input into a sequence
+  \seq_pop_right:NN \l_citeresp_items_seq \l_lastitem_tl % Pop the last item
+  \seq_map_function:NN \l_citeresp_items_seq \__citeresp_format:n % Map each item
+  \__citeresp_formatnocomma:n \l_lastitem_tl
+  )
+}
+
+\cs_new_protected:Nn \__citeresp_format:n
+{
+  \fcolorbox{black}{black!15}{\bfseries\scriptsize R#1}~on~page~\pageref{resp:#1},~
+}
+
+\cs_new_protected:Nn \__citeresp_formatnocomma:n
+{
+  \fcolorbox{black}{black!15}{\bfseries\scriptsize R#1}~on~page~\pageref{resp:#1}
+}
+
+\seq_new:N \l_citeresp_items_seq % Define a unique sequence variable
+
+\ExplSyntaxOff
+```
+
+This is not the most efficient code, but it works! You can now do something like `\citeresp{1a1.1, 1a1.2, 1a1.3}` and it will print "(see Ra1.1 on page 1, Ra1.2 on page 3, Ra1.3 on page 4)" (with the right page numbers.
+
+For help on the L3 programming layer, see [this tutorial](https://www.alanshawn.com/latex3-tutorial/) and [the docs](https://ctan.math.washington.edu/tex-archive/macros/latex/required/l3kernel/interface3.pdf)
